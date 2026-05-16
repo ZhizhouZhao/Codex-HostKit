@@ -104,7 +104,7 @@ Codex HostKit 不会：
 ```bash
 cd ~/Downloads && \
 curl -L -o Codex-HostKit-0.1.0.dmg https://github.com/ZhizhouZhao/Codex-HostKit/releases/download/v0.1.0/Codex-HostKit-0.1.0.dmg && \
-echo "3227456bee877710b3245c828addb5f57b5fbde0744024e68811a9c8ce9d8e03  Codex-HostKit-0.1.0.dmg" | shasum -a 256 -c - && \
+echo "2146d4f93ba48457b919504a6c64b03792343c1b2c9b10045d4ac37ea929c811  Codex-HostKit-0.1.0.dmg" | shasum -a 256 -c - && \
 open Codex-HostKit-0.1.0.dmg
 ```
 
