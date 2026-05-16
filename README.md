@@ -30,9 +30,26 @@ Codex HostKit 是一个 macOS 本机辅助工具，面向需要在 Mac 上使用
 
 ## Mac 部署教程
 
-### 方式一：下载 DMG
+### 方式一：终端下载 DMG
 
-普通用户可以直接在 GitHub Releases 下载 `Codex-HostKit-*.dmg`。
+普通用户可以打开 macOS 自带的 `终端`，复制下面这段命令并回车：
+
+```sh
+cd ~/Downloads && \
+curl -L -o Codex-HostKit-0.1.0.dmg https://github.com/ZhizhouZhao/Codex-HostKit/releases/download/v0.1.0/Codex-HostKit-0.1.0.dmg && \
+echo "3227456bee877710b3245c828addb5f57b5fbde0744024e68811a9c8ce9d8e03  Codex-HostKit-0.1.0.dmg" | shasum -a 256 -c - && \
+open Codex-HostKit-0.1.0.dmg
+```
+
+命令完成后，会自动打开 DMG。把 `Codex HostKit.app` 拖到 `Applications`，再从 `Applications` 打开 `Codex HostKit`。
+
+如果校验失败，终端会显示 `FAILED`，请删除下载的 DMG 后重新下载。
+
+当前版本使用本地构建签名，未做 Apple notarization。如果 macOS 提示“无法验证开发者”，可以到 `系统设置 -> 隐私与安全性`，在底部允许打开；也可以右键点击 App 后选择 `打开`。
+
+### 方式二：网页下载 DMG
+
+也可以直接在 GitHub Releases 下载 `Codex-HostKit-*.dmg`。
 
 1. 打开最新 Release。
 2. 下载 DMG 文件。
@@ -40,17 +57,15 @@ Codex HostKit 是一个 macOS 本机辅助工具，面向需要在 Mac 上使用
 4. 把 `Codex HostKit.app` 拖到 `Applications`。
 5. 从 `Applications` 打开 `Codex HostKit`。
 
-当前版本使用本地构建签名，未做 Apple notarization。如果 macOS 提示“无法验证开发者”，可以到 `系统设置 -> 隐私与安全性`，在底部允许打开；也可以右键点击 App 后选择 `打开`。
+### 方式三：从源码运行
 
-### 方式二：从源码运行
-
-### 1. 准备环境
+#### 1. 准备环境
 
 - macOS 14 或更新版本。
 - Xcode 26 或更新版本。
 - 已安装并可正常打开 Codex。
 
-### 2. 克隆仓库
+#### 2. 克隆仓库
 
 ```sh
 git clone https://github.com/ZhizhouZhao/Codex-HostKit.git
@@ -64,7 +79,7 @@ git clone git@github.com:ZhizhouZhao/Codex-HostKit.git
 cd Codex-HostKit
 ```
 
-### 3. 用 Xcode 运行
+#### 3. 用 Xcode 运行
 
 1. 打开 `CodexPlusPlusCompanion.xcodeproj`。
 2. 在 Xcode 顶部选择 `CodexPlusPlusCompanion` scheme。
