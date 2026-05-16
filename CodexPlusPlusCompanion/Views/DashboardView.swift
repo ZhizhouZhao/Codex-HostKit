@@ -18,7 +18,7 @@ struct DashboardView: View {
                     Divider().opacity(0.25)
                     InfoBlock(
                         title: "为什么需要对话找回",
-                        text: "你在 ChatGPT 登录模式、本地 API provider、Codex++ watcher 或 app-server 之间切换时，本地 thread 可能看起来丢了、列表不完整，或者手机重连后看不到旧对话。对话找回只扫描本机 sessions，帮你找到、预览、导出和备份本地历史。",
+                        text: "你在 ChatGPT 登录模式、本地 API provider、watcher 或 app-server 之间切换时，本地 thread 可能看起来丢了、列表不完整，或者手机重连后看不到旧对话。对话找回只扫描本机 sessions，帮你找到、预览、导出和备份本地历史。",
                         icon: "clock.arrow.circlepath"
                     )
                     Divider().opacity(0.25)
@@ -31,18 +31,18 @@ struct DashboardView: View {
                 Panel {
                     Text("推荐操作顺序").font(.headline)
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 10)], spacing: 10) {
-                        quickStep("1. 安装/更新 Codex++", "用于插件入口、扫码连接和 UI 增强。", "arrow.down.circle")
+                        quickStep("1. 确认本机 Codex", "确认 Mac 端能打开并可扫码连接。", "arrow.down.circle")
                         quickStep("2. 配置 Provider", "粘贴中转站 URL / API key。", "network")
                         quickStep("3. 手机扫码连接", "手机和 Mac 保持 ChatGPT 登录。", "qrcode")
                         quickStep("4. 检查请求记录", "确认消耗的是 provider 额度。", "checkmark.seal")
                     }
                     HStack {
                         CompactLinkButton(
-                            title: "打开 Codex++ GitHub",
+                            title: "Codex++ 软件页面",
                             systemImage: "arrow.up.right.square",
                             url: URL(string: "https://github.com/bigpizzav3/codex-plus-plus")!
                         )
-                        .help("Codex++ 可提供插件入口、UI 注入和扫码连接相关能力。本 App 是 companion，不替代 Codex++。")
+                        .help("由国内开发者开发的 Codex++ 可以实现 API 登录、解锁插件功能。")
                         Button("刷新状态") { refresh() }
                             .disabled(isRefreshing)
                             .help("重新检查配置、Keychain、watcher、sessions、插件缓存等本机状态。")
@@ -117,7 +117,7 @@ enum DashboardStatusBuilder {
             HealthStatus(title: "当前 provider", detail: provider.isEmpty ? "未找到 model_provider" : provider, level: provider == "custom" || provider == "kkrich" ? .ok : .warning),
             HealthStatus(title: "Base URL", detail: baseURL.isEmpty ? "缺少 base_url" : baseURL, level: baseURL.hasPrefix("http") ? .ok : .warning),
             HealthStatus(title: "API key", detail: keychainKey != nil ? "已存入 Keychain" : (launchKey != nil ? "launchctl 中存在" : "缺失"), level: (keychainKey != nil || launchKey != nil) ? .ok : .warning),
-            HealthStatus(title: "Codex++ watcher plist", detail: watcher.plistURL.path, level: watcher.exists() ? .ok : .warning),
+            HealthStatus(title: "Watcher plist", detail: watcher.plistURL.path, level: watcher.exists() ? .ok : .warning),
             HealthStatus(title: "Watcher EnvironmentVariables", detail: watcher.hasEnvironmentVariables() ? "已配置" : "缺失", level: watcher.hasEnvironmentVariables() ? .ok : .warning),
             HealthStatus(title: "Sessions 大小", detail: sessionsSize, level: .ok),
             HealthStatus(title: "插件缓存", detail: plugin.cacheURL.path, level: plugin.cacheExists() ? .ok : .warning),

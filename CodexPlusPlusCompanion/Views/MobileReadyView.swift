@@ -6,7 +6,7 @@ struct MobileReadyView: View {
     @State private var summary = ""
 
     private let instructions = """
-    1. Mac 上打开 Codex / Codex++ 的 Codex Mobile 页面。
+    1. Mac 上打开 Codex 的 Codex Mobile 页面。
     2. 手机 ChatGPT 登录同一个账号。
     3. 手机进入 Codex Mobile，扫描 Mac 上的二维码。
     4. 手机选择 Mac host / local thread。
@@ -22,7 +22,7 @@ struct MobileReadyView: View {
                 PageHeader(title: "扫码连接", subtitle: "手机用 ChatGPT 登录建立连接，Mac 本地用 provider 配置控制计费。")
                 Panel {
                     InfoBlock(
-                        title: "这不是免登录，也不是替代 Codex++",
+                        title: "这不是免登录",
                         text: "Codex Mobile 要远程连接 Mac host，手机 ChatGPT 和 Mac GUI 仍需要登录同一个 ChatGPT 账号。这个 App 解决的是：保留扫码连接能力，但让 Mac 本地真实模型请求走你配置的中转站或 OpenAI-compatible API。",
                         icon: "qrcode"
                     )
@@ -38,12 +38,6 @@ struct MobileReadyView: View {
                         text: "频繁切换账号登录、provider、watcher 或 app-server 后，本地 thread 列表可能不完整。遇到这种情况请去“对话找回”，它会扫描 Mac 本地 sessions，不修改远端 ChatGPT Cloud 历史。",
                         icon: "clock.arrow.circlepath"
                     )
-                }
-                Panel {
-                    Text("扫码连接步骤").font(.headline)
-                    Text(instructions)
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
                 }
                 Panel {
                     Text("常用操作").font(.headline)
@@ -76,11 +70,11 @@ struct MobileReadyView: View {
                         }
                         .help("把手机端该怎么连接 Mac host 的步骤复制出来，方便发到手机或备忘录。")
             CompactLinkButton(
-                title: "打开 Codex++ GitHub",
+                title: "Codex++ 软件页面",
                 systemImage: "arrow.up.right.square",
                 url: URL(string: "https://github.com/bigpizzav3/codex-plus-plus")!
             )
-            .help("如果需要 Codex++ 的插件入口、商店入口或扫码连接增强，可以从 GitHub 获取 Codex++。")
+            .help("由国内开发者开发的 Codex++ 可以实现 API 登录、解锁插件功能。")
                         Button("打开 ~/.codex 文件夹") { NSWorkspace.shared.open(ConfigManager.shared.codexDirectory) }
                             .help("~/.codex 是 Codex 在本机保存配置和历史的默认文件夹。")
                         Button("用默认编辑器打开 config.toml") { NSWorkspace.shared.open(ConfigManager.shared.configURL) }

@@ -1,13 +1,13 @@
-# Codex++ Companion
+# Codex HostKit
 
-Codex++ Companion is a macOS helper for Codex++ users. It helps configure OpenAI-compatible provider billing while keeping ChatGPT account login for Codex Mobile remote control. It also backs up/restores local plugin snapshots and checks host readiness.
+Codex HostKit is a macOS local tool for Codex users. It helps configure OpenAI-compatible provider billing while keeping ChatGPT account login for Codex Mobile remote control. It also backs up/restores local plugin snapshots and checks host readiness.
 
 Important disclaimer: this project does not bypass account eligibility, OAuth authorization, paid access, server-side restrictions, or official plugin access controls. It only manages local configuration, local plugin snapshots, and local host readiness.
 
 ## What It Solves
 
 - Keeps ChatGPT login available for Codex Mobile host control.
-- Configures local Codex/Codex++ model requests to use an OpenAI-compatible provider.
+- Configures local Codex model requests to use an OpenAI-compatible provider.
 - Avoids manual `nano`, Terminal, `launchctl`, and plist edits.
 - Saves and restores plugins already installed on this Mac.
 - Shows simple host readiness diagnostics for mobile/local thread use.
@@ -25,7 +25,7 @@ Paste one of these into Provider Bridge:
 - JSON, such as `{"key":"sk-...","url":"https://example.com"}`
 - cURL with `Authorization: Bearer ...`
 
-The app parses the key, URL, model, normalizes `/v1`, stores the key in Keychain, writes `~/.codex/config.toml`, and can sync `OPENAI_API_KEY` plus `KKRICH_API_KEY` to `launchctl` and the Codex++ watcher plist. Existing config and plist files are backed up before writing.
+The app parses the key, URL, model, normalizes `/v1`, stores the key in Keychain, writes `~/.codex/config.toml`, and can sync `OPENAI_API_KEY` plus `KKRICH_API_KEY` to `launchctl` and a local watcher plist. Existing config and plist files are backed up before writing.
 
 ## Local Plugin Snapshot
 
@@ -35,7 +35,7 @@ The app scans `~/.codex/plugins/cache`, backs it up to `~/.codex/plugins/local-s
 
 - API keys are stored in macOS Keychain and redacted from command output.
 - Config writes create timestamped backups first.
-- The MVP does not automatically kill Codex or Codex++ processes.
+- The MVP does not automatically kill Codex processes.
 - Maintenance scripts are generated for review instead of being executed automatically.
 
 ## Build
@@ -50,13 +50,13 @@ xcodebuild -project CodexPlusPlusCompanion.xcodeproj -scheme CodexPlusPlusCompan
 
 ## Troubleshooting
 
-Missing environment variable: save the provider key to Keychain, then use “Sync Env to launchctl” and “Sync Env to Codex++ Watcher”.
+Missing environment variable: save the provider key to Keychain, then use “Sync Env to launchctl” and the watcher sync action.
 
 401 Invalid token: confirm the key belongs to the selected provider and the base URL ends with `/v1`.
 
 Idle timeout waiting for SSE: increase provider/server timeout, confirm the provider supports the Responses API, and try non-stream first.
 
-Plugins not visible: restore the local snapshot, generate the local marketplace, then reopen Codex++ normally. OAuth-based plugins may need login again.
+Plugins not visible: restore the local snapshot, generate the local marketplace, then reopen Codex normally. OAuth-based plugins may need login again.
 
 Mobile stuck thinking: fully close and reopen ChatGPT on the phone, choose Mac host / local thread, create a new thread, send `Reply only ok`, and check the provider dashboard for a request record.
 

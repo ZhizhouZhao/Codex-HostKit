@@ -17,7 +17,7 @@ struct MaintenanceView: View {
                         Button("生成清理孤儿进程脚本") { output = ProcessInspector.cleanOrphanScript() }
                             .help("只生成脚本文本，不自动执行。孤儿进程是父进程已退出但还残留的 app-server。")
                         Button("生成修复脚本") { output = ProcessInspector.repairScript() }
-                            .help("只生成脚本文本，用于手动重载 Codex++ watcher。")
+                            .help("只生成脚本文本，用于手动重载 watcher。")
                         Button("备份 Sessions") { backupSessions() }.disabled(isWorking)
                             .help("复制本地对话目录作为备份。")
                         Button("移动旧 Sessions 到备份") { resetSessions() }.disabled(isWorking)

@@ -7,7 +7,7 @@ Use Provider Bridge:
 1. Parse provider info.
 2. Save to Keychain.
 3. Sync Env to launchctl.
-4. Sync Env to Codex++ Watcher.
+4. Sync Env to watcher.
 
 ## 401 Invalid Token
 

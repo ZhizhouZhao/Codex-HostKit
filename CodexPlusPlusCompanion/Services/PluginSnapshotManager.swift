@@ -74,7 +74,7 @@ final class PluginSnapshotManager {
         }
         let json: [String: Any] = [
             "schemaVersion": 1,
-            "generatedBy": "Codex++ Companion",
+            "generatedBy": "Codex HostKit",
             "generatedAt": ISO8601DateFormatter().string(from: Date()),
             "disclaimer": "Local snapshot only. This does not bypass account eligibility, OAuth authorization, paid access, server-side restrictions, or official plugin access controls.",
             "plugins": entries
@@ -88,43 +88,84 @@ final class PluginSnapshotManager {
     }
 
     private func scanPlugins(at root: URL) -> [PluginInfo] {
-        guard let children = try? fileManager.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey]) else {
-            return []
-        }
-        return children.filter { ((try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false) }
-            .map { url in
-                let manifest = findManifest(under: url)
+        findPluginManifests(under: root)
+            .map { manifest in
+                let pluginRoot = manifest.deletingLastPathComponent().deletingLastPathComponent()
+                let manifestObject = readManifest(manifest)
+                let interface = manifestObject?["interface"] as? [String: Any]
+                let icon = preferredIconURL(from: interface, manifestURL: manifest)
+                let name = manifestObject?["name"] as? String
+                let displayName = interface?["displayName"] as? String
+
                 return PluginInfo(
-                    name: manifest.flatMap { manifestName($0) } ?? url.lastPathComponent,
-                    path: url,
-                    hasManifest: manifest != nil,
-                    version: manifest.flatMap { manifestVersion($0) }
+                    name: name ?? pluginRoot.lastPathComponent,
+                    displayName: displayName ?? name ?? pluginRoot.lastPathComponent,
+                    path: pluginRoot,
+                    hasManifest: true,
+                    version: manifestObject?["version"] as? String,
+                    iconURL: icon,
+                    brandColor: interface?["brandColor"] as? String,
+                    category: interface?["category"] as? String
                 )
             }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
     }
 
-    private func findManifest(under url: URL) -> URL? {
-        guard let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: nil) else { return nil }
-        for case let fileURL as URL in enumerator where fileURL.lastPathComponent == "plugin.json" {
-            return fileURL
+    private func findPluginManifests(under root: URL) -> [URL] {
+        guard let sources = try? fileManager.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey]) else {
+            return []
         }
-        return nil
+
+        var manifests: [URL] = []
+        for source in sources where isDirectory(source) {
+            guard let pluginNames = try? fileManager.contentsOfDirectory(at: source, includingPropertiesForKeys: [.isDirectoryKey]) else {
+                continue
+            }
+            for pluginName in pluginNames where isDirectory(pluginName) {
+                guard let versions = try? fileManager.contentsOfDirectory(at: pluginName, includingPropertiesForKeys: [.isDirectoryKey]) else {
+                    continue
+                }
+                for version in versions where isDirectory(version) {
+                    let manifest = version.appendingPathComponent(".codex-plugin/plugin.json")
+                    if fileManager.fileExists(atPath: manifest.path) {
+                        manifests.append(manifest)
+                    }
+                }
+            }
+        }
+        return manifests
     }
 
-    private func manifestName(_ url: URL) -> String? {
-        manifestField(url, field: "name")
+    private func isDirectory(_ url: URL) -> Bool {
+        (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
     }
 
-    private func manifestVersion(_ url: URL) -> String? {
-        manifestField(url, field: "version")
-    }
-
-    private func manifestField(_ url: URL, field: String) -> String? {
+    private func readManifest(_ url: URL) -> [String: Any]? {
         guard let data = try? Data(contentsOf: url),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return nil
         }
-        return object[field] as? String
+        return object
+    }
+
+    private func resolveManifestAsset(_ value: String, manifestURL: URL) -> URL? {
+        guard !value.hasPrefix("http://"), !value.hasPrefix("https://") else {
+            return nil
+        }
+        let pluginRoot = manifestURL.deletingLastPathComponent().deletingLastPathComponent()
+        let cleaned = value.hasPrefix("./") ? String(value.dropFirst(2)) : value
+        let url = pluginRoot.appendingPathComponent(cleaned)
+        return fileManager.fileExists(atPath: url.path) ? url : nil
+    }
+
+    private func preferredIconURL(from interface: [String: Any]?, manifestURL: URL) -> URL? {
+        let candidates = [
+            interface?["composerIcon"] as? String,
+            interface?["logo"] as? String
+        ].compactMap { $0 }
+            .compactMap { resolveManifestAsset($0, manifestURL: manifestURL) }
+
+        return candidates.first { ["png", "jpg", "jpeg", "icns"].contains($0.pathExtension.lowercased()) }
+            ?? candidates.first
     }
 }

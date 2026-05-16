@@ -8,7 +8,7 @@ final class AppNotifier: ObservableObject {
     func success(_ title: String, detail: String) {
         toast = ToastMessage(title: title, detail: detail)
         Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_600_000_000)
+            try? await Task.sleep(nanoseconds: 3_800_000_000)
             if self.toast?.title == title {
                 self.toast = nil
             }
@@ -23,45 +23,55 @@ struct ToastMessage: Identifiable, Equatable {
 }
 
 enum AppSection: String, CaseIterable, Identifiable {
+    case welcome = "快速开始"
     case dashboard = "总览"
     case providerBridge = "Provider 配置"
     case recovery = "对话找回"
     case pluginSnapshot = "插件快照"
     case mobileReady = "扫码连接"
     case maintenance = "维护诊断"
+    case about = "关于"
 
     var id: String { rawValue }
 
     var icon: String {
         switch self {
+        case .welcome: "sparkles"
         case .dashboard: "gauge"
         case .providerBridge: "network"
         case .recovery: "clock.arrow.circlepath"
         case .pluginSnapshot: "shippingbox"
         case .mobileReady: "iphone.gen3"
         case .maintenance: "wrench.and.screwdriver"
+        case .about: "info.circle"
         }
     }
 }
 
 struct ContentView: View {
     @State private var selection: AppSection = .dashboard
+    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
+    @State private var isShowingWelcome = false
     @EnvironmentObject private var notifier: AppNotifier
 
     var body: some View {
-        ZStack(alignment: .top) {
+        ZStack(alignment: .topTrailing) {
             NavigationSplitView {
                 List(AppSection.allCases, selection: $selection) { section in
                     Label(section.rawValue, systemImage: section.icon)
                         .tag(section)
                 }
-                .navigationTitle("Codex++ Companion")
+                .navigationTitle("Codex HostKit")
                 .scrollContentBackground(.hidden)
                 .background(Color.appSidebar)
                 .navigationSplitViewColumnWidth(min: 170, ideal: 190, max: 230)
             } detail: {
                 Group {
                     switch selection {
+                    case .welcome:
+                        WelcomeView {
+                            isShowingWelcome = true
+                        }
                     case .dashboard:
                         DashboardView()
                     case .providerBridge:
@@ -74,6 +84,8 @@ struct ContentView: View {
                         MobileReadyView()
                     case .maintenance:
                         MaintenanceView()
+                    case .about:
+                        AboutView()
                     }
                 }
                 .background(Color.appBackground)
@@ -81,11 +93,25 @@ struct ContentView: View {
             if let toast = notifier.toast {
                 SuccessToast(message: toast)
                     .padding(.top, 16)
+                    .padding(.trailing, 24)
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .zIndex(10)
             }
         }
         .background(WindowConfigurator())
+        .onAppear {
+            if !hasSeenWelcome {
+                isShowingWelcome = true
+                hasSeenWelcome = true
+            }
+        }
+        .sheet(isPresented: $isShowingWelcome) {
+            WelcomeOnboardingView {
+                isShowingWelcome = false
+            }
+            .frame(width: 680, height: 520)
+            .preferredColorScheme(.dark)
+        }
         .animation(.spring(response: 0.24, dampingFraction: 0.88), value: notifier.toast)
         .preferredColorScheme(.dark)
     }
@@ -171,7 +197,7 @@ struct SuccessToast: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "arrow.up.circle.fill")
+            Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(.green)
             VStack(alignment: .leading, spacing: 2) {
@@ -185,8 +211,10 @@ struct SuccessToast: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.green.opacity(0.22), in: Capsule())
-        .overlay(Capsule().stroke(.green.opacity(0.45)))
+        .frame(maxWidth: 360, alignment: .leading)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().fill(Color.white.opacity(0.08)))
+        .overlay(Capsule().stroke(Color.white.opacity(0.16)))
         .shadow(color: .black.opacity(0.35), radius: 18, y: 8)
     }
 }

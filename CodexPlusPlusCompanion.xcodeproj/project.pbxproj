@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		APPREF000000000000000001 /* Codex++ Companion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Codex++ Companion.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		APPREF000000000000000001 /* Codex HostKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Codex HostKit.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		GROUP000000000000000001 /* CodexPlusPlusCompanion */ = {isa = PBXFileReference; lastKnownFileType = folder; path = CodexPlusPlusCompanion; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -41,7 +41,7 @@
 		PROD000000000000000001 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				APPREF000000000000000001 /* Codex++ Companion.app */,
+				APPREF000000000000000001 /* Codex HostKit.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,7 +68,7 @@
 			packageProductDependencies = (
 			);
 			productName = CodexPlusPlusCompanion;
-			productReference = APPREF000000000000000001 /* Codex++ Companion.app */;
+			productReference = APPREF000000000000000001 /* Codex HostKit.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -251,7 +251,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Codex++ Companion";
+				INFOPLIST_KEY_CFBundleDisplayName = "Codex HostKit";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -261,7 +261,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.local.CodexPlusPlusCompanion;
-				PRODUCT_NAME = "Codex++ Companion";
+				PRODUCT_NAME = "Codex HostKit";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 			};
@@ -277,7 +277,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Codex++ Companion";
+				INFOPLIST_KEY_CFBundleDisplayName = "Codex HostKit";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -287,7 +287,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.local.CodexPlusPlusCompanion;
-				PRODUCT_NAME = "Codex++ Companion";
+				PRODUCT_NAME = "Codex HostKit";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 			};

@@ -38,11 +38,12 @@ struct ProviderBridgeView: View {
                     HStack {
                         Button("同步到 launchctl") { syncLaunchctl() }.disabled(provider.apiKey.isEmpty)
                             .help("launchctl 是 macOS 的后台环境变量管理工具。同步后，之后启动的本机 Codex 进程能读到 API key。")
-                        Button("同步到 Codex++ Watcher") { syncWatcher() }.disabled(provider.apiKey.isEmpty)
-                            .help("Watcher 是 Codex++ 的本地监控启动配置。这里会把 API key 写入它的 EnvironmentVariables，并先备份 plist。")
+                        Button("同步到 Watcher") { syncWatcher() }.disabled(provider.apiKey.isEmpty)
+                            .help("Watcher 是本机监控启动配置。这里会把 API key 写入它的 EnvironmentVariables，并先备份 plist。")
                         Button("测试 /v1/responses 非流式") { testProvider() }.disabled(provider.apiKey.isEmpty || provider.baseURL.isEmpty || isTesting)
                             .help("向 provider 发一条最小测试请求，确认接口地址和 API key 能用。")
-                        Button("测试 /v1/responses 流式") { log = "流式测试在当前 MVP 中暂未完整实现。" }
+                        Button("测试 /v1/responses 流式") { log = "流式测试在当前 MVP 中暂未完整实现，请先使用非流式测试确认 provider 可用。" }
+                            .disabled(provider.apiKey.isEmpty || provider.baseURL.isEmpty || isTesting)
                             .help("流式就是边生成边返回。当前版本先提供非流式稳定测试。")
                     }
                 }
@@ -121,7 +122,7 @@ struct ProviderBridgeView: View {
             }
             let backup = try WatcherPlistManager.shared.updateEnvironment(apiKey: provider.apiKey)
             log = "已更新 watcher EnvironmentVariables。备份：\(backup?.path ?? "无")。"
-            notifier.success("同步成功", detail: "Codex++ Watcher 环境变量已更新。")
+            notifier.success("同步成功", detail: "Watcher 环境变量已更新。")
         } catch {
             log = error.localizedDescription
         }

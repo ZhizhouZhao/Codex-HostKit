@@ -48,7 +48,7 @@ enum ProcessInspector {
     static func repairScript() -> String {
         """
         #!/bin/zsh
-        # Review before running. This reloads the Codex++ watcher plist if it exists.
+        # Review before running. This reloads the watcher plist if it exists.
         PLIST="$HOME/Library/LaunchAgents/com.bigpizzav3.codexplusplus.watcher.plist"
         if [[ -f "$PLIST" ]]; then
           launchctl unload "$PLIST"
