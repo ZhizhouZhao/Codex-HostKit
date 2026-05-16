@@ -30,6 +30,20 @@ Codex HostKit 是一个 macOS 本机辅助工具，面向需要在 Mac 上使用
 
 ## Mac 部署教程
 
+### 方式一：下载 DMG
+
+普通用户可以直接在 GitHub Releases 下载 `Codex-HostKit-*.dmg`。
+
+1. 打开最新 Release。
+2. 下载 DMG 文件。
+3. 双击打开 DMG。
+4. 把 `Codex HostKit.app` 拖到 `Applications`。
+5. 从 `Applications` 打开 `Codex HostKit`。
+
+当前版本使用本地构建签名，未做 Apple notarization。如果 macOS 提示“无法验证开发者”，可以到 `系统设置 -> 隐私与安全性`，在底部允许打开；也可以右键点击 App 后选择 `打开`。
+
+### 方式二：从源码运行
+
 ### 1. 准备环境
 
 - macOS 14 或更新版本。
