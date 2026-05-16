@@ -3,6 +3,7 @@ import SwiftUI
 struct MaintenanceView: View {
     @State private var report = MaintenanceReport()
     @State private var output = "点击“仅诊断”。"
+    @State private var isWorking = false
 
     var body: some View {
         ScrollView {
@@ -10,11 +11,14 @@ struct MaintenanceView: View {
                 PageHeader(title: "维护诊断", subtitle: "先做只读诊断。脚本只生成给用户确认，不自动执行。")
                 Panel {
                     HStack {
-                        Button("仅诊断") { diagnose() }
+                        Button("仅诊断") { diagnose() }.disabled(isWorking)
                         Button("生成清理孤儿进程脚本") { output = ProcessInspector.cleanOrphanScript() }
                         Button("生成修复脚本") { output = ProcessInspector.repairScript() }
-                        Button("备份 Sessions") { backupSessions() }
-                        Button("移动旧 Sessions 到备份") { resetSessions() }
+                        Button("备份 Sessions") { backupSessions() }.disabled(isWorking)
+                        Button("移动旧 Sessions 到备份") { resetSessions() }.disabled(isWorking)
+                    }
+                    if isWorking {
+                        ProgressView().controlSize(.small)
                     }
                 }
                 Panel {
@@ -43,25 +47,57 @@ struct MaintenanceView: View {
     }
 
     private func diagnose() {
-        report = ProcessInspector.diagnose()
-        output = "诊断完成。没有杀进程，也没有重载 plist。"
+        isWorking = true
+        output = "正在诊断..."
+        Task.detached {
+            let result = ProcessInspector.diagnose()
+            await MainActor.run {
+                report = result
+                output = "诊断完成。没有杀进程，也没有重载 plist。"
+                isWorking = false
+            }
+        }
     }
 
     private func backupSessions() {
-        do {
-            output = "Sessions 备份：\((try ProcessInspector.backupSessions())?.path ?? "未找到 sessions 文件夹")。"
-            diagnose()
-        } catch {
-            output = error.localizedDescription
+        isWorking = true
+        output = "正在备份 sessions..."
+        Task.detached {
+            do {
+                let backup = try ProcessInspector.backupSessions()
+                let result = ProcessInspector.diagnose()
+                await MainActor.run {
+                    report = result
+                    output = "Sessions 备份：\(backup?.path ?? "未找到 sessions 文件夹")。"
+                    isWorking = false
+                }
+            } catch {
+                await MainActor.run {
+                    output = error.localizedDescription
+                    isWorking = false
+                }
+            }
         }
     }
 
     private func resetSessions() {
-        do {
-            output = "Sessions 已移动到：\((try ProcessInspector.resetSessionsByMoving())?.path ?? "未找到 sessions 文件夹")。"
-            diagnose()
-        } catch {
-            output = error.localizedDescription
+        isWorking = true
+        output = "正在移动 sessions..."
+        Task.detached {
+            do {
+                let backup = try ProcessInspector.resetSessionsByMoving()
+                let result = ProcessInspector.diagnose()
+                await MainActor.run {
+                    report = result
+                    output = "Sessions 已移动到：\(backup?.path ?? "未找到 sessions 文件夹")。"
+                    isWorking = false
+                }
+            } catch {
+                await MainActor.run {
+                    output = error.localizedDescription
+                    isWorking = false
+                }
+            }
         }
     }
 }

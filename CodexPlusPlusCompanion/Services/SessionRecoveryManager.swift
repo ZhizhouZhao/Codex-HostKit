@@ -4,6 +4,7 @@ import AppKit
 final class SessionRecoveryManager {
     nonisolated(unsafe) static let shared = SessionRecoveryManager()
     private let fileManager = FileManager.default
+    private let previewReadLimit = 1_000_000
 
     func scan() -> [SessionRecord] {
         scanRoots().flatMap(scanRoot).sorted {
@@ -24,6 +25,7 @@ final class SessionRecoveryManager {
         let directory = exportDirectory()
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("\(safeFileName(session.id)).md")
+        let fullContent = try redactedContent(for: session)
         let markdown = """
         # Codex Session Export
 
@@ -37,7 +39,7 @@ final class SessionRecoveryManager {
         > 注意：导出内容可能包含代码、路径、命令输出和项目隐私。API key 和常见 token 已做基础脱敏。
 
         ```text
-        \(session.previewText)
+        \(fullContent)
         ```
         """
         try markdown.write(to: url, atomically: true, encoding: .utf8)
@@ -58,7 +60,7 @@ final class SessionRecoveryManager {
             "created_at": session.createdAt.map { ISO8601DateFormatter().string(from: $0) } ?? "",
             "modified_at": session.modifiedAt.map { ISO8601DateFormatter().string(from: $0) } ?? "",
             "file_size": session.fileSize,
-            "redacted_content": session.previewText,
+            "redacted_content": try redactedContent(for: session),
             "warning": "导出内容可能包含代码、路径、命令输出和项目隐私。API key 和常见 token 已做基础脱敏。"
         ]
         let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
@@ -126,7 +128,8 @@ final class SessionRecoveryManager {
 
     private func parseSessionFile(_ fileURL: URL, codexHome: URL) -> SessionRecord {
         let values = try? fileURL.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey, .fileSizeKey])
-        let raw = (try? String(contentsOf: fileURL, encoding: .utf8)) ?? ""
+        let preview = readPreview(fileURL)
+        let raw = preview.text
         let redacted = redact(raw)
         let jsonObjects = parseJSONObjects(raw)
         let sessionID = firstString(in: jsonObjects, keys: ["session_id", "sessionId", "id", "conversation_id"]) ?? fileURL.deletingPathExtension().lastPathComponent
@@ -150,8 +153,25 @@ final class SessionRecoveryManager {
             firstUserMessage: summarize(userMessages.first ?? firstLikelyMessage(raw) ?? ""),
             lastAssistantMessage: summarize(assistantMessages.last ?? ""),
             fileSize: UInt64(values?.fileSize ?? 0),
-            previewText: redacted
+            previewText: preview.truncated ? redacted + "\n\n[预览已截断：列表扫描只读取文件前 1 MB，导出会读取完整文件。]" : redacted,
+            previewTruncated: preview.truncated
         )
+    }
+
+    private func readPreview(_ fileURL: URL) -> (text: String, truncated: Bool) {
+        guard let handle = try? FileHandle(forReadingFrom: fileURL) else {
+            return ("", false)
+        }
+        defer { try? handle.close() }
+        let data = handle.readData(ofLength: previewReadLimit + 1)
+        let truncated = data.count > previewReadLimit
+        let clipped = truncated ? data.prefix(previewReadLimit) : data[...]
+        return (String(data: Data(clipped), encoding: .utf8) ?? "", truncated)
+    }
+
+    private func redactedContent(for session: SessionRecord) throws -> String {
+        let raw = try String(contentsOf: session.fileURL, encoding: .utf8)
+        return redact(raw)
     }
 
     private func parseJSONObjects(_ raw: String) -> [Any] {

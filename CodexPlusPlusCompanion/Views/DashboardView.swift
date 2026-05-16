@@ -2,13 +2,15 @@ import SwiftUI
 
 struct DashboardView: View {
     @State private var statuses: [HealthStatus] = []
+    @State private var isRefreshing = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 PageHeader(title: "总览", subtitle: "检查本机 Codex++ host、provider bridge 和插件状态。")
                 Panel {
-                    Button("刷新状态") { refresh() }
+                    Button(isRefreshing ? "正在刷新..." : "刷新状态") { refresh() }
+                        .disabled(isRefreshing)
                     VStack(spacing: 10) {
                         ForEach(statuses) { status in
                             HStack(alignment: .top, spacing: 12) {
@@ -36,6 +38,19 @@ struct DashboardView: View {
     }
 
     private func refresh() {
+        isRefreshing = true
+        Task.detached {
+            let statuses = DashboardStatusBuilder.build()
+            await MainActor.run {
+                self.statuses = statuses
+                self.isRefreshing = false
+            }
+        }
+    }
+}
+
+enum DashboardStatusBuilder {
+    static func build() -> [HealthStatus] {
         let config = ConfigManager.shared
         let summary = config.summary()
         let baseURL = summary["base_url"] ?? ""
@@ -46,7 +61,7 @@ struct DashboardView: View {
         let plugin = PluginSnapshotManager.shared
         let watcher = WatcherPlistManager.shared
 
-        statuses = [
+        return [
             HealthStatus(title: "Codex config", detail: config.configURL.path, level: config.configExists() ? .ok : .error),
             HealthStatus(title: "当前 provider", detail: provider.isEmpty ? "未找到 model_provider" : provider, level: provider == "custom" || provider == "kkrich" ? .ok : .warning),
             HealthStatus(title: "Base URL", detail: baseURL.isEmpty ? "缺少 base_url" : baseURL, level: baseURL.hasPrefix("http") ? .ok : .warning),

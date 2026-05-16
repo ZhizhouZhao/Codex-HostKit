@@ -8,6 +8,7 @@ struct SessionRecoveryView: View {
     @State private var projectFilter = "全部"
     @State private var providerFilter = "全部"
     @State private var log = "点击“扫描本地对话”开始。所有内容只在本机读取。"
+    @State private var isWorking = false
 
     private var filteredSessions: [SessionRecord] {
         sessions.filter { session in
@@ -41,9 +42,13 @@ struct SessionRecoveryView: View {
             VStack(alignment: .leading, spacing: 12) {
                 PageHeader(title: "对话找回", subtitle: "扫描 Mac 本地 Codex sessions，找得到、看得见、能导出、能备份。")
                 HStack {
-                    Button("扫描本地对话") { scan() }
-                    Button("备份 Sessions") { backupSessions() }
-                    Button("移动旧/大 Sessions 到备份") { moveOldSessions() }
+                    Button("扫描本地对话") { scan() }.disabled(isWorking)
+                    Button("备份 Sessions") { backupSessions() }.disabled(isWorking)
+                    Button("移动旧/大 Sessions 到备份") { moveOldSessions() }.disabled(isWorking)
+                }
+                if isWorking {
+                    ProgressView()
+                        .controlSize(.small)
                 }
                 TextField("搜索关键词、路径、模型、消息", text: $query)
                     .textFieldStyle(.roundedBorder)
@@ -130,8 +135,8 @@ struct SessionRecoveryView: View {
             Panel {
                 HStack {
                     Button("在 Finder 打开") { SessionRecoveryManager.shared.openInFinder(session) }
-                    Button("导出 Markdown") { exportMarkdown(session) }
-                    Button("导出 JSON") { exportJSON(session) }
+                    Button("导出 Markdown") { exportMarkdown(session) }.disabled(isWorking)
+                    Button("导出 JSON") { exportJSON(session) }.disabled(isWorking)
                     Button("复制 Session ID") {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(session.id, forType: .string)
@@ -161,47 +166,98 @@ struct SessionRecoveryView: View {
     }
 
     private func scan() {
-        sessions = SessionRecoveryManager.shared.scan()
-        selected = selected.flatMap { old in sessions.first { $0.id == old.id && $0.fileURL == old.fileURL } } ?? sessions.first
-        log = "已扫描到 \(sessions.count) 个本地 session/history 文件。"
+        isWorking = true
+        log = "正在后台扫描本地 sessions..."
+        let previous = selected
+        Task.detached {
+            let records = SessionRecoveryManager.shared.scan()
+            await MainActor.run {
+                sessions = records
+                selected = previous.flatMap { old in records.first { $0.id == old.id && $0.fileURL == old.fileURL } } ?? records.first
+                log = "已扫描到 \(records.count) 个本地 session/history 文件。"
+                isWorking = false
+            }
+        }
     }
 
     private func exportMarkdown(_ session: SessionRecord) {
-        do {
-            let url = try SessionRecoveryManager.shared.exportMarkdown(session)
-            log = "已导出 Markdown：\(url.path)"
-            NSWorkspace.shared.activateFileViewerSelecting([url])
-        } catch {
-            log = error.localizedDescription
+        isWorking = true
+        log = "正在导出 Markdown..."
+        Task.detached {
+            do {
+                let url = try SessionRecoveryManager.shared.exportMarkdown(session)
+                await MainActor.run {
+                    log = "已导出 Markdown：\(url.path)"
+                    isWorking = false
+                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                }
+            } catch {
+                await MainActor.run {
+                    log = error.localizedDescription
+                    isWorking = false
+                }
+            }
         }
     }
 
     private func exportJSON(_ session: SessionRecord) {
-        do {
-            let url = try SessionRecoveryManager.shared.exportJSON(session)
-            log = "已导出 JSON：\(url.path)"
-            NSWorkspace.shared.activateFileViewerSelecting([url])
-        } catch {
-            log = error.localizedDescription
+        isWorking = true
+        log = "正在导出 JSON..."
+        Task.detached {
+            do {
+                let url = try SessionRecoveryManager.shared.exportJSON(session)
+                await MainActor.run {
+                    log = "已导出 JSON：\(url.path)"
+                    isWorking = false
+                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                }
+            } catch {
+                await MainActor.run {
+                    log = error.localizedDescription
+                    isWorking = false
+                }
+            }
         }
     }
 
     private func backupSessions() {
-        do {
-            let backups = try SessionRecoveryManager.shared.backupAllSessions()
-            log = backups.isEmpty ? "没有找到可备份的 sessions 目录。" : "已备份：\n" + backups.map(\.path).joined(separator: "\n")
-        } catch {
-            log = error.localizedDescription
+        isWorking = true
+        log = "正在后台备份 sessions..."
+        Task.detached {
+            do {
+                let backups = try SessionRecoveryManager.shared.backupAllSessions()
+                await MainActor.run {
+                    log = backups.isEmpty ? "没有找到可备份的 sessions 目录。" : "已备份：\n" + backups.map(\.path).joined(separator: "\n")
+                    isWorking = false
+                }
+            } catch {
+                await MainActor.run {
+                    log = error.localizedDescription
+                    isWorking = false
+                }
+            }
         }
     }
 
     private func moveOldSessions() {
-        do {
-            let backup = try SessionRecoveryManager.shared.moveOldOrLargeSessionsToBackup()
-            log = "已将 30 天前或超过 25 MB 的 session 文件移动到备份：\(backup.path)"
-            scan()
-        } catch {
-            log = error.localizedDescription
+        isWorking = true
+        log = "正在移动旧/大 session 文件到备份..."
+        Task.detached {
+            do {
+                let backup = try SessionRecoveryManager.shared.moveOldOrLargeSessionsToBackup()
+                let records = SessionRecoveryManager.shared.scan()
+                await MainActor.run {
+                    sessions = records
+                    selected = records.first
+                    log = "已将 30 天前或超过 25 MB 的 session 文件移动到备份：\(backup.path)"
+                    isWorking = false
+                }
+            } catch {
+                await MainActor.run {
+                    log = error.localizedDescription
+                    isWorking = false
+                }
+            }
         }
     }
 

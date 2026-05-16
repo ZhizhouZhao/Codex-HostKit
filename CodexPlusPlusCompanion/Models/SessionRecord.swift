@@ -14,6 +14,7 @@ struct SessionRecord: Identifiable, Hashable {
     let lastAssistantMessage: String
     let fileSize: UInt64
     let previewText: String
+    let previewTruncated: Bool
 
     var displayTitle: String {
         if !firstUserMessage.isEmpty { return firstUserMessage }
