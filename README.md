@@ -14,10 +14,6 @@ Codex HostKit 就是把这些本机操作放进一个简单的 Mac App 里。
 
 English: A small macOS helper for local Codex/Codex++ provider config, plugin snapshots, mobile host readiness, and session recovery.
 
-<p align="center">
-  <img src="docs/assets/app-icon.png" alt="Codex HostKit icon" width="128">
-</p>
-
 ## 它能做什么
 
 ### 1. 配置自己的 API / 中转站
