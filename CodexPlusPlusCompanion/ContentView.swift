@@ -1,11 +1,12 @@
 import SwiftUI
 
 enum AppSection: String, CaseIterable, Identifiable {
-    case dashboard = "Dashboard"
-    case providerBridge = "Provider Bridge"
-    case pluginSnapshot = "Local Plugin Snapshot"
-    case mobileReady = "Mobile Ready"
-    case maintenance = "Maintenance"
+    case dashboard = "总览"
+    case providerBridge = "Provider 配置"
+    case recovery = "对话找回"
+    case pluginSnapshot = "插件快照"
+    case mobileReady = "手机连接"
+    case maintenance = "维护诊断"
 
     var id: String { rawValue }
 
@@ -13,6 +14,7 @@ enum AppSection: String, CaseIterable, Identifiable {
         switch self {
         case .dashboard: "gauge"
         case .providerBridge: "network"
+        case .recovery: "clock.arrow.circlepath"
         case .pluginSnapshot: "shippingbox"
         case .mobileReady: "iphone.gen3"
         case .maintenance: "wrench.and.screwdriver"
@@ -39,6 +41,8 @@ struct ContentView: View {
                     DashboardView()
                 case .providerBridge:
                     ProviderBridgeView()
+                case .recovery:
+                    SessionRecoveryView()
                 case .pluginSnapshot:
                     PluginSnapshotView()
                 case .mobileReady:

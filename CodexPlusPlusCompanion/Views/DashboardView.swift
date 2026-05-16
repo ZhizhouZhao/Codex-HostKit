@@ -6,9 +6,9 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                PageHeader(title: "Dashboard", subtitle: "Local Codex++ host readiness and provider bridge status.")
+                PageHeader(title: "总览", subtitle: "检查本机 Codex++ host、provider bridge 和插件状态。")
                 Panel {
-                    Button("Refresh Status") { refresh() }
+                    Button("刷新状态") { refresh() }
                     VStack(spacing: 10) {
                         ForEach(statuses) { status in
                             HStack(alignment: .top, spacing: 12) {
@@ -25,8 +25,8 @@ struct DashboardView: View {
                     }
                 }
                 Panel {
-                    Text("Mobile reminder").font(.headline)
-                    Text("ChatGPT login is still needed on the phone. Codex Mobile must choose Mac host / local thread, not Cloud thread, for local provider billing.")
+                    Text("手机连接提醒").font(.headline)
+                    Text("手机 ChatGPT 仍然需要登录账号。Codex Mobile 必须选择 Mac host / local thread，不要选择 Cloud thread，本地 provider 计费才会生效。")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -48,14 +48,14 @@ struct DashboardView: View {
 
         statuses = [
             HealthStatus(title: "Codex config", detail: config.configURL.path, level: config.configExists() ? .ok : .error),
-            HealthStatus(title: "Current provider", detail: provider.isEmpty ? "No model_provider found" : provider, level: provider == "custom" || provider == "kkrich" ? .ok : .warning),
-            HealthStatus(title: "Base URL", detail: baseURL.isEmpty ? "Missing base_url" : baseURL, level: baseURL.hasPrefix("http") ? .ok : .warning),
-            HealthStatus(title: "API key", detail: keychainKey != nil ? "Stored in Keychain" : (launchKey != nil ? "Available in launchctl" : "Missing"), level: (keychainKey != nil || launchKey != nil) ? .ok : .warning),
+            HealthStatus(title: "当前 provider", detail: provider.isEmpty ? "未找到 model_provider" : provider, level: provider == "custom" || provider == "kkrich" ? .ok : .warning),
+            HealthStatus(title: "Base URL", detail: baseURL.isEmpty ? "缺少 base_url" : baseURL, level: baseURL.hasPrefix("http") ? .ok : .warning),
+            HealthStatus(title: "API key", detail: keychainKey != nil ? "已存入 Keychain" : (launchKey != nil ? "launchctl 中存在" : "缺失"), level: (keychainKey != nil || launchKey != nil) ? .ok : .warning),
             HealthStatus(title: "Codex++ watcher plist", detail: watcher.plistURL.path, level: watcher.exists() ? .ok : .warning),
-            HealthStatus(title: "Watcher EnvironmentVariables", detail: watcher.hasEnvironmentVariables() ? "Present" : "Missing", level: watcher.hasEnvironmentVariables() ? .ok : .warning),
-            HealthStatus(title: "Sessions size", detail: sessionsSize, level: .ok),
-            HealthStatus(title: "Plugin cache", detail: plugin.cacheURL.path, level: plugin.cacheExists() ? .ok : .warning),
-            HealthStatus(title: "Local marketplace", detail: plugin.marketplaceURL.path, level: plugin.marketplaceExists() ? .ok : .warning)
+            HealthStatus(title: "Watcher EnvironmentVariables", detail: watcher.hasEnvironmentVariables() ? "已配置" : "缺失", level: watcher.hasEnvironmentVariables() ? .ok : .warning),
+            HealthStatus(title: "Sessions 大小", detail: sessionsSize, level: .ok),
+            HealthStatus(title: "插件缓存", detail: plugin.cacheURL.path, level: plugin.cacheExists() ? .ok : .warning),
+            HealthStatus(title: "本地 marketplace", detail: plugin.marketplaceURL.path, level: plugin.marketplaceExists() ? .ok : .warning)
         ]
     }
 }

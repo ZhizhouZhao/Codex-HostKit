@@ -5,35 +5,35 @@ struct MobileReadyView: View {
     @State private var summary = ""
 
     private let instructions = """
-    1. Fully close ChatGPT App on phone.
-    2. Reopen ChatGPT.
-    3. Go to Codex.
-    4. Choose Mac host / local thread.
-    5. Do not choose Cloud.
-    6. Create a new thread.
-    7. Send: Reply only ok.
-    8. Check provider dashboard for request record.
+    1. 在手机上完全关闭 ChatGPT App。
+    2. 重新打开 ChatGPT。
+    3. 进入 Codex。
+    4. 选择 Mac host / local thread。
+    5. 不要选择 Cloud。
+    6. 创建一个新 thread。
+    7. 发送：Reply only ok。
+    8. 到 provider dashboard 检查是否有请求记录。
     """
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                PageHeader(title: "Mobile Ready", subtitle: "Make sure Codex Mobile is controlling this Mac host, not a Cloud thread.")
+                PageHeader(title: "手机连接", subtitle: "确认 Codex Mobile 连接的是这台 Mac host，而不是 Cloud thread。")
                 Panel {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("ChatGPT account login is still needed on phone.")
-                        Text("Phone must choose Mac host / local thread.")
-                        Text("Do not use Cloud thread.")
-                        Text("Local provider billing only works when mobile connects to Mac host.")
-                        Text("Provider request evidence should be checked in the provider dashboard.")
+                        Text("手机端仍然需要 ChatGPT 账号登录。")
+                        Text("手机必须选择 Mac host / local thread。")
+                        Text("不要使用 Cloud thread。")
+                        Text("只有连接 Mac host 时，本地 provider 计费才会生效。")
+                        Text("请到 provider dashboard 检查请求记录。")
                     }
                 }
                 Panel {
                     HStack {
-                        Button("Copy Mobile Instructions") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(instructions, forType: .string) }
-                        Button("Open ~/.codex folder") { NSWorkspace.shared.open(ConfigManager.shared.codexDirectory) }
-                        Button("Open config.toml in default editor") { NSWorkspace.shared.open(ConfigManager.shared.configURL) }
-                        Button("Show current config summary") { showSummary() }
+                        Button("复制手机操作说明") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(instructions, forType: .string) }
+                        Button("打开 ~/.codex 文件夹") { NSWorkspace.shared.open(ConfigManager.shared.codexDirectory) }
+                        Button("用默认编辑器打开 config.toml") { NSWorkspace.shared.open(ConfigManager.shared.configURL) }
+                        Button("显示当前配置摘要") { showSummary() }
                     }
                 }
                 Panel {
@@ -51,7 +51,7 @@ struct MobileReadyView: View {
 
     private func showSummary() {
         summary = ConfigManager.shared.summary()
-            .map { "\($0.key): \($0.value.isEmpty ? "missing" : $0.value)" }
+            .map { "\($0.key): \($0.value.isEmpty ? "缺失" : $0.value)" }
             .sorted()
             .joined(separator: "\n")
     }

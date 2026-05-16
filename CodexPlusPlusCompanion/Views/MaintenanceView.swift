@@ -2,28 +2,28 @@ import SwiftUI
 
 struct MaintenanceView: View {
     @State private var report = MaintenanceReport()
-    @State private var output = "Run Diagnose Only."
+    @State private var output = "点击“仅诊断”。"
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                PageHeader(title: "Maintenance", subtitle: "Read-only diagnostics first. Scripts are generated for review, not auto-executed.")
+                PageHeader(title: "维护诊断", subtitle: "先做只读诊断。脚本只生成给用户确认，不自动执行。")
                 Panel {
                     HStack {
-                        Button("Diagnose Only") { diagnose() }
-                        Button("Generate Clean Orphan Script") { output = ProcessInspector.cleanOrphanScript() }
-                        Button("Generate Repair Script") { output = ProcessInspector.repairScript() }
-                        Button("Backup Sessions") { backupSessions() }
-                        Button("Reset Sessions by moving old folder to backup") { resetSessions() }
+                        Button("仅诊断") { diagnose() }
+                        Button("生成清理孤儿进程脚本") { output = ProcessInspector.cleanOrphanScript() }
+                        Button("生成修复脚本") { output = ProcessInspector.repairScript() }
+                        Button("备份 Sessions") { backupSessions() }
+                        Button("移动旧 Sessions 到备份") { resetSessions() }
                     }
                 }
                 Panel {
                     Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 8) {
-                        row("app-server processes", "\(report.appServerCount)")
-                        row("orphan app-server PPID=1", "\(report.orphanAppServerCount)")
-                        row("sessions size", report.sessionsSize)
-                        row("watcher plist", report.watcherExists ? "exists" : "missing")
-                        row("9229 listening", report.port9229Listening ? "yes" : "no")
+                        row("app-server 进程数", "\(report.appServerCount)")
+                        row("PPID=1 孤儿 app-server", "\(report.orphanAppServerCount)")
+                        row("sessions 大小", report.sessionsSize)
+                        row("watcher plist", report.watcherExists ? "存在" : "缺失")
+                        row("9229 是否监听", report.port9229Listening ? "是" : "否")
                     }
                 }
                 Panel {
@@ -44,12 +44,12 @@ struct MaintenanceView: View {
 
     private func diagnose() {
         report = ProcessInspector.diagnose()
-        output = "Diagnosis complete. No processes were killed and no plist was reloaded."
+        output = "诊断完成。没有杀进程，也没有重载 plist。"
     }
 
     private func backupSessions() {
         do {
-            output = "Sessions backup: \((try ProcessInspector.backupSessions())?.path ?? "sessions folder not found")."
+            output = "Sessions 备份：\((try ProcessInspector.backupSessions())?.path ?? "未找到 sessions 文件夹")。"
             diagnose()
         } catch {
             output = error.localizedDescription
@@ -58,7 +58,7 @@ struct MaintenanceView: View {
 
     private func resetSessions() {
         do {
-            output = "Sessions moved to: \((try ProcessInspector.resetSessionsByMoving())?.path ?? "sessions folder not found")."
+            output = "Sessions 已移动到：\((try ProcessInspector.resetSessionsByMoving())?.path ?? "未找到 sessions 文件夹")。"
             diagnose()
         } catch {
             output = error.localizedDescription

@@ -1,9 +1,9 @@
 import SwiftUI
 
 enum HealthLevel: String {
-    case ok = "OK"
-    case warning = "Warning"
-    case error = "Error"
+    case ok = "正常"
+    case warning = "警告"
+    case error = "错误"
 
     var color: Color {
         switch self {
