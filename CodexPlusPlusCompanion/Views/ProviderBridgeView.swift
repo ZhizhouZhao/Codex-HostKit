@@ -10,7 +10,14 @@ struct ProviderBridgeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                PageHeader(title: "Provider 配置", subtitle: "粘贴中转站或 OpenAI 兼容接口信息，App 自动配置本机 Codex。")
+                PageHeader(title: "Provider 配置", subtitle: "让 Mac 本地 Codex 请求走中转站 / OpenAI-compatible API，而不是消耗 ChatGPT Cloud 额度。")
+                Panel {
+                    InfoBlock(
+                        title: "这里配置的是实际模型请求的计费方",
+                        text: "ChatGPT 登录只用于手机扫码和 Mac host 连接；本机 Codex 的模型请求会读取 ~/.codex/config.toml 和环境变量。你在这里粘贴中转站链接、API key、JSON 或 cURL，App 会帮你解析、保存 key、备份并写入配置。",
+                        icon: "network"
+                    )
+                }
                 Panel {
                     Text("Provider 输入").font(.headline)
                         .help("Provider 指模型服务提供方，也就是你的请求实际发往哪里计费。可以是 OpenAI，也可以是兼容 OpenAI API 的中转站。")

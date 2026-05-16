@@ -41,7 +41,14 @@ struct SessionRecoveryView: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
-                PageHeader(title: "对话找回", subtitle: "扫描本机历史，找回、预览、导出和备份本地对话。")
+                PageHeader(title: "对话找回", subtitle: "解决切换登录/provider/watcher 后，本地 thread 列表不完整或旧对话看不到的问题。")
+                Panel {
+                    InfoBlock(
+                        title: "只找回 Mac 本地历史",
+                        text: "这里不会修改远端 ChatGPT Cloud 历史，也不会把内容上传到服务器。它扫描 ~/.codex/sessions 和 history.jsonl，帮你找到旧对话、预览内容、导出备份。",
+                        icon: "lock.shield"
+                    )
+                }
                 ViewThatFits(in: .horizontal) {
                     HStack {
                         rescueButtons

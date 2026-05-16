@@ -8,10 +8,48 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                PageHeader(title: "总览", subtitle: "检查本机 Codex++ host、provider bridge 和插件状态。")
+                PageHeader(title: "Codex Mobile + ChatGPT 登录，但 API 走中转计费", subtitle: "保持手机和 Mac 账号登录可连接，同时让本机 Codex 请求使用 OpenAI-compatible provider。")
                 Panel {
-                    Button(isRefreshing ? "正在刷新..." : "刷新状态") { refresh() }
-                        .disabled(isRefreshing)
+                    InfoBlock(
+                        title: "这个 App 解决什么痛点",
+                        text: "手机 Codex Mobile 本来要求手机 ChatGPT 和 Mac 端 Codex GUI 登录同一个账号，用来扫码连接 Mac host。但普通 Plus 套餐额度不够用，Pro 又不一定划算。本工具帮助你保留 ChatGPT 登录和扫码连接，同时把 Mac 本地真实模型请求配置到中转站或其他 OpenAI-compatible API。",
+                        icon: "iphone.gen3"
+                    )
+                    Divider().opacity(0.25)
+                    InfoBlock(
+                        title: "为什么需要对话找回",
+                        text: "你在 ChatGPT 登录模式、本地 API provider、Codex++ watcher 或 app-server 之间切换时，本地 thread 可能看起来丢了、列表不完整，或者手机重连后看不到旧对话。对话找回只扫描本机 sessions，帮你找到、预览、导出和备份本地历史。",
+                        icon: "clock.arrow.circlepath"
+                    )
+                    Divider().opacity(0.25)
+                    InfoBlock(
+                        title: "为什么要插件快照",
+                        text: "部分地区插件库显示不完整，之前已经安装过的插件也可能因为网络环境变化而不显示。本地插件快照只备份你这台 Mac 上已有的插件缓存，减少重复挂 VPN 找回插件入口的麻烦，不下载或解锁官方受限插件。",
+                        icon: "shippingbox"
+                    )
+                }
+                Panel {
+                    Text("推荐操作顺序").font(.headline)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 10)], spacing: 10) {
+                        quickStep("1. 安装/更新 Codex++", "用于插件入口、扫码连接和 UI 增强。", "arrow.down.circle")
+                        quickStep("2. 配置 Provider", "粘贴中转站 URL / API key。", "network")
+                        quickStep("3. 手机扫码连接", "手机和 Mac 保持 ChatGPT 登录。", "qrcode")
+                        quickStep("4. 检查请求记录", "确认消耗的是 provider 额度。", "checkmark.seal")
+                    }
+                    HStack {
+                        CompactLinkButton(
+                            title: "打开 Codex++ GitHub",
+                            systemImage: "arrow.up.right.square",
+                            url: URL(string: "https://github.com/bigpizzav3/codex-plus-plus")!
+                        )
+                        .help("Codex++ 可提供插件入口、UI 注入和扫码连接相关能力。本 App 是 companion，不替代 Codex++。")
+                        Button("刷新状态") { refresh() }
+                            .disabled(isRefreshing)
+                            .help("重新检查配置、Keychain、watcher、sessions、插件缓存等本机状态。")
+                    }
+                }
+                Panel {
+                    Text("当前状态").font(.headline)
                     VStack(spacing: 10) {
                         ForEach(statuses) { status in
                             HStack(alignment: .top, spacing: 12) {
@@ -26,11 +64,6 @@ struct DashboardView: View {
                             Divider().opacity(0.25)
                         }
                     }
-                }
-                Panel {
-                    Text("手机连接提醒").font(.headline)
-                    Text("手机 ChatGPT 仍然需要登录账号。Codex Mobile 必须选择 Mac host / local thread，不要选择 Cloud thread，本地 provider 计费才会生效。")
-                        .foregroundStyle(.secondary)
                 }
             }
             .padding(16)
@@ -49,6 +82,22 @@ struct DashboardView: View {
             }
         }
     }
+}
+
+private func quickStep(_ title: String, _ text: String, _ icon: String) -> some View {
+    HStack(alignment: .top, spacing: 8) {
+        Image(systemName: icon)
+            .foregroundStyle(.green)
+            .frame(width: 18)
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title).font(.subheadline.weight(.semibold))
+            Text(text).font(.caption).foregroundStyle(.secondary)
+        }
+        Spacer()
+    }
+    .padding(10)
+    .background(Color.black.opacity(0.16))
+    .clipShape(RoundedRectangle(cornerRadius: 8))
 }
 
 enum DashboardStatusBuilder {

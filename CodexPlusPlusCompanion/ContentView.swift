@@ -27,7 +27,7 @@ enum AppSection: String, CaseIterable, Identifiable {
     case providerBridge = "Provider 配置"
     case recovery = "对话找回"
     case pluginSnapshot = "插件快照"
-    case mobileReady = "手机连接"
+    case mobileReady = "扫码连接"
     case maintenance = "维护诊断"
 
     var id: String { rawValue }
@@ -128,6 +128,41 @@ struct Panel<Content: View>: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color.appBorder)
         )
+    }
+}
+
+struct InfoBlock: View {
+    let title: String
+    let text: String
+    var icon: String = "info.circle"
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .foregroundStyle(.green)
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.headline)
+                Text(text)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+struct CompactLinkButton: View {
+    let title: String
+    let systemImage: String
+    let url: URL
+
+    var body: some View {
+        Button {
+            NSWorkspace.shared.open(url)
+        } label: {
+            Label(title, systemImage: systemImage)
+        }
     }
 }
 

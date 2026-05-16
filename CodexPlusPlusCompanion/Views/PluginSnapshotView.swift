@@ -8,7 +8,14 @@ struct PluginSnapshotView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PageHeader(title: "插件快照", subtitle: "只备份和恢复这台 Mac 上已经存在的 Codex/Codex++ 插件缓存。")
+            PageHeader(title: "插件快照", subtitle: "备份本机已有插件缓存，减少网络切换后插件入口丢失的麻烦。")
+            Panel {
+                InfoBlock(
+                    title: "为什么需要本地插件快照",
+                    text: "部分地区插件库显示不完整，或者不挂 VPN 时商店内容加载不稳定。这个功能只保存你这台 Mac 已经安装过的插件缓存，之后可从本地恢复，避免反复依赖插件商店加载。OAuth 授权和官方权限仍以服务端为准。",
+                    icon: "shippingbox"
+                )
+            }
             Panel {
                 HStack {
                     Button("扫描已安装插件") { scan() }.disabled(isWorking)
