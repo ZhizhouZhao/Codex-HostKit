@@ -1,20 +1,26 @@
 import SwiftUI
 
 struct PluginSnapshotView: View {
+    @EnvironmentObject private var notifier: AppNotifier
     @State private var plugins: [PluginInfo] = []
     @State private var log = "点击扫描已安装插件开始。"
     @State private var isWorking = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 12) {
             PageHeader(title: "插件快照", subtitle: "只备份和恢复这台 Mac 上已经存在的 Codex/Codex++ 插件缓存。")
             Panel {
                 HStack {
                     Button("扫描已安装插件") { scan() }.disabled(isWorking)
+                        .help("扫描本机已经存在的插件缓存，不会下载插件。")
                     Button("备份插件") { backup() }.disabled(isWorking)
+                        .help("把本机插件缓存复制到 local-snapshot，恢复时可从这里取回。")
                     Button("恢复插件") { restore() }.disabled(isWorking)
+                        .help("从 local-snapshot 恢复到插件缓存；已有缓存会先移动到备份。")
                     Button("生成本地 Marketplace") { marketplace() }.disabled(isWorking)
+                        .help("Marketplace 是插件列表文件。这里生成的是只指向本机快照的个人列表。")
                     Button("打开插件目录") { PluginSnapshotManager.shared.openPluginFolders() }
+                        .help("在 Finder 中打开插件相关文件夹。")
                 }
                 if isWorking {
                     ProgressView().controlSize(.small)
@@ -35,7 +41,7 @@ struct PluginSnapshotView: View {
                 Text(log).font(.system(.body, design: .monospaced)).textSelection(.enabled)
             }
         }
-        .padding(24)
+        .padding(16)
         .onAppear(perform: scan)
     }
 
@@ -48,6 +54,7 @@ struct PluginSnapshotView: View {
                 plugins = found
                 log = "找到 \(found.count) 个已安装插件缓存目录。"
                 isWorking = false
+                notifier.success("扫描成功", detail: "找到 \(found.count) 个插件缓存目录。")
             }
         }
     }
@@ -61,6 +68,7 @@ struct PluginSnapshotView: View {
                 await MainActor.run {
                     log = "已备份插件缓存到 \(PluginSnapshotManager.shared.snapshotURL.path)。"
                     isWorking = false
+                    notifier.success("备份成功", detail: "插件缓存已保存为本地快照。")
                 }
             } catch {
                 await MainActor.run {
@@ -82,6 +90,7 @@ struct PluginSnapshotView: View {
                     plugins = found
                     log = "已从本地快照恢复到插件缓存。已有缓存会先移动到带时间戳的备份。"
                     isWorking = false
+                    notifier.success("恢复成功", detail: "插件缓存已从本地快照恢复。")
                 }
             } catch {
                 await MainActor.run {
@@ -101,6 +110,7 @@ struct PluginSnapshotView: View {
                 await MainActor.run {
                     log = "已生成 \(PluginSnapshotManager.shared.marketplaceURL.path)。"
                     isWorking = false
+                    notifier.success("生成成功", detail: "本地 Marketplace 文件已更新。")
                 }
             } catch {
                 await MainActor.run {

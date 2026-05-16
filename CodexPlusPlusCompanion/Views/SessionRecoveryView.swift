@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 
 struct SessionRecoveryView: View {
+    @EnvironmentObject private var notifier: AppNotifier
     @State private var sessions: [SessionRecord] = []
     @State private var selected: SessionRecord?
     @State private var query = ""
@@ -40,49 +41,56 @@ struct SessionRecoveryView: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
-                PageHeader(title: "对话找回", subtitle: "扫描 Mac 本地 Codex sessions，找得到、看得见、能导出、能备份。")
-                HStack {
-                    Button("扫描本地对话") { scan() }.disabled(isWorking)
-                    Button("备份 Sessions") { backupSessions() }.disabled(isWorking)
-                    Button("移动旧/大 Sessions 到备份") { moveOldSessions() }.disabled(isWorking)
+                PageHeader(title: "对话找回", subtitle: "扫描本机历史，找回、预览、导出和备份本地对话。")
+                ViewThatFits(in: .horizontal) {
+                    HStack {
+                        rescueButtons
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        rescueButtons
+                    }
                 }
+                .font(.caption)
                 if isWorking {
                     ProgressView()
                         .controlSize(.small)
                 }
                 TextField("搜索关键词、路径、模型、消息", text: $query)
                     .textFieldStyle(.roundedBorder)
-                Picker("项目路径", selection: $projectFilter) {
+                    .help("在本地 session 列表里搜索。不会上传内容。")
+                Picker("项目", selection: $projectFilter) {
                     ForEach(projectOptions, id: \.self) { Text($0).tag($0) }
                 }
+                .help("项目路径是当时运行 Codex 的文件夹位置。")
                 Picker("Provider", selection: $providerFilter) {
                     ForEach(providerOptions, id: \.self) { Text($0).tag($0) }
                 }
+                .help("Provider 是当时使用的模型服务提供方，例如 OpenAI、KKRICH、custom。")
                 List(filteredSessions, selection: $selected) { session in
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 3) {
                         Text(session.displayTitle)
-                            .font(.headline)
+                            .font(.subheadline.weight(.semibold))
                             .lineLimit(2)
                         Text("\(dateText(session.modifiedAt)) · \(session.provider) · \(sizeText(session.fileSize))")
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundStyle(.secondary)
                         if !session.projectPath.isEmpty {
                             Text(session.projectPath)
-                                .font(.caption)
+                                .font(.caption2)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 2)
                     .tag(session)
                 }
                 Text(log)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
             }
-            .padding(20)
-            .frame(minWidth: 360, idealWidth: 430, maxWidth: 480)
+            .padding(14)
+            .frame(minWidth: 270, idealWidth: 330, maxWidth: 400)
             .background(Color.appBackground)
 
             Divider().opacity(0.35)
@@ -98,7 +106,7 @@ struct SessionRecoveryView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .padding(24)
+                    .padding(16)
                 }
             }
             .background(Color.appBackground)
@@ -106,8 +114,19 @@ struct SessionRecoveryView: View {
         .onAppear(perform: scan)
     }
 
+    private var rescueButtons: some View {
+        Group {
+                    Button("扫描本地对话") { scan() }.disabled(isWorking)
+                .help("重新扫描 ~/.codex/sessions 和 history.jsonl，只在本机读取。")
+                    Button("备份 Sessions") { backupSessions() }.disabled(isWorking)
+                .help("Sessions 是 Codex 本地对话文件夹。备份会复制整个目录，不删除原文件。")
+                    Button("移动旧/大 Sessions 到备份") { moveOldSessions() }.disabled(isWorking)
+                .help("只移动 30 天前或超过 25 MB 的文件到备份目录，不会直接删除。")
+        }
+    }
+
     private func detail(for session: SessionRecord) -> some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 12) {
             PageHeader(title: "Session 详情", subtitle: session.id)
             Panel {
                 Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
@@ -135,13 +154,18 @@ struct SessionRecoveryView: View {
             Panel {
                 HStack {
                     Button("在 Finder 打开") { SessionRecoveryManager.shared.openInFinder(session) }
+                        .help("Finder 是 macOS 文件管理器。这里会定位到该 session 文件。")
                     Button("导出 Markdown") { exportMarkdown(session) }.disabled(isWorking)
+                        .help("Markdown 是适合阅读和分享的文本格式，扩展名 .md。")
                     Button("导出 JSON") { exportJSON(session) }.disabled(isWorking)
+                        .help("JSON 是结构化数据格式，适合后续程序处理或排查问题。")
                     Button("复制 Session ID") {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(session.id, forType: .string)
                         log = "已复制 Session ID。"
+                        notifier.success("复制成功", detail: "Session ID 已复制到剪贴板。")
                     }
+                    .help("Session ID 是本地对话文件的识别编号。")
                 }
                 Text("导出前请注意：session 可能包含代码、路径、命令输出和项目隐私。App 会做基础脱敏，但请在分享前自行复查。")
                     .font(.caption)
@@ -155,7 +179,7 @@ struct SessionRecoveryView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(24)
+        .padding(16)
     }
 
     private func row(_ key: String, _ value: String) -> some View {
@@ -176,6 +200,7 @@ struct SessionRecoveryView: View {
                 selected = previous.flatMap { old in records.first { $0.id == old.id && $0.fileURL == old.fileURL } } ?? records.first
                 log = "已扫描到 \(records.count) 个本地 session/history 文件。"
                 isWorking = false
+                notifier.success("扫描成功", detail: "已找到 \(records.count) 个本地对话文件。")
             }
         }
     }
@@ -190,6 +215,7 @@ struct SessionRecoveryView: View {
                     log = "已导出 Markdown：\(url.path)"
                     isWorking = false
                     NSWorkspace.shared.activateFileViewerSelecting([url])
+                    notifier.success("导出成功", detail: "Markdown 文件已保存到 Downloads。")
                 }
             } catch {
                 await MainActor.run {
@@ -210,6 +236,7 @@ struct SessionRecoveryView: View {
                     log = "已导出 JSON：\(url.path)"
                     isWorking = false
                     NSWorkspace.shared.activateFileViewerSelecting([url])
+                    notifier.success("导出成功", detail: "JSON 文件已保存到 Downloads。")
                 }
             } catch {
                 await MainActor.run {
@@ -229,6 +256,9 @@ struct SessionRecoveryView: View {
                 await MainActor.run {
                     log = backups.isEmpty ? "没有找到可备份的 sessions 目录。" : "已备份：\n" + backups.map(\.path).joined(separator: "\n")
                     isWorking = false
+                    if !backups.isEmpty {
+                        notifier.success("备份成功", detail: "Sessions 目录已复制到备份位置。")
+                    }
                 }
             } catch {
                 await MainActor.run {
@@ -251,6 +281,7 @@ struct SessionRecoveryView: View {
                     selected = records.first
                     log = "已将 30 天前或超过 25 MB 的 session 文件移动到备份：\(backup.path)"
                     isWorking = false
+                    notifier.success("移动成功", detail: "旧/大 session 文件已移动到备份目录。")
                 }
             } catch {
                 await MainActor.run {

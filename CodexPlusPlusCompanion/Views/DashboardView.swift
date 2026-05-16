@@ -1,12 +1,13 @@
 import SwiftUI
 
 struct DashboardView: View {
+    @EnvironmentObject private var notifier: AppNotifier
     @State private var statuses: [HealthStatus] = []
     @State private var isRefreshing = false
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 12) {
                 PageHeader(title: "总览", subtitle: "检查本机 Codex++ host、provider bridge 和插件状态。")
                 Panel {
                     Button(isRefreshing ? "正在刷新..." : "刷新状态") { refresh() }
@@ -32,7 +33,7 @@ struct DashboardView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(24)
+            .padding(16)
         }
         .onAppear(perform: refresh)
     }
@@ -44,6 +45,7 @@ struct DashboardView: View {
             await MainActor.run {
                 self.statuses = statuses
                 self.isRefreshing = false
+                self.notifier.success("刷新成功", detail: "总览状态已更新。")
             }
         }
     }

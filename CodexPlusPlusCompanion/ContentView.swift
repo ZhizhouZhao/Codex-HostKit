@@ -1,4 +1,26 @@
 import SwiftUI
+import AppKit
+
+@MainActor
+final class AppNotifier: ObservableObject {
+    @Published var toast: ToastMessage?
+
+    func success(_ title: String, detail: String) {
+        toast = ToastMessage(title: title, detail: detail)
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_600_000_000)
+            if self.toast?.title == title {
+                self.toast = nil
+            }
+        }
+    }
+}
+
+struct ToastMessage: Identifiable, Equatable {
+    let id = UUID()
+    let title: String
+    let detail: String
+}
 
 enum AppSection: String, CaseIterable, Identifiable {
     case dashboard = "总览"
@@ -24,35 +46,47 @@ enum AppSection: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @State private var selection: AppSection = .dashboard
+    @EnvironmentObject private var notifier: AppNotifier
 
     var body: some View {
-        NavigationSplitView {
-            List(AppSection.allCases, selection: $selection) { section in
-                Label(section.rawValue, systemImage: section.icon)
-                    .tag(section)
-            }
-            .navigationTitle("Codex++ Companion")
-            .scrollContentBackground(.hidden)
-            .background(Color.appSidebar)
-        } detail: {
-            Group {
-                switch selection {
-                case .dashboard:
-                    DashboardView()
-                case .providerBridge:
-                    ProviderBridgeView()
-                case .recovery:
-                    SessionRecoveryView()
-                case .pluginSnapshot:
-                    PluginSnapshotView()
-                case .mobileReady:
-                    MobileReadyView()
-                case .maintenance:
-                    MaintenanceView()
+        ZStack(alignment: .top) {
+            NavigationSplitView {
+                List(AppSection.allCases, selection: $selection) { section in
+                    Label(section.rawValue, systemImage: section.icon)
+                        .tag(section)
                 }
+                .navigationTitle("Codex++ Companion")
+                .scrollContentBackground(.hidden)
+                .background(Color.appSidebar)
+                .navigationSplitViewColumnWidth(min: 170, ideal: 190, max: 230)
+            } detail: {
+                Group {
+                    switch selection {
+                    case .dashboard:
+                        DashboardView()
+                    case .providerBridge:
+                        ProviderBridgeView()
+                    case .recovery:
+                        SessionRecoveryView()
+                    case .pluginSnapshot:
+                        PluginSnapshotView()
+                    case .mobileReady:
+                        MobileReadyView()
+                    case .maintenance:
+                        MaintenanceView()
+                    }
+                }
+                .background(Color.appBackground)
             }
-            .background(Color.appBackground)
+            if let toast = notifier.toast {
+                SuccessToast(message: toast)
+                    .padding(.top, 16)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(10)
+            }
         }
+        .background(WindowConfigurator())
+        .animation(.spring(response: 0.24, dampingFraction: 0.88), value: notifier.toast)
         .preferredColorScheme(.dark)
     }
 }
@@ -71,9 +105,9 @@ struct PageHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.system(size: 28, weight: .semibold))
+                .font(.system(size: 22, weight: .semibold))
             Text(subtitle)
-                .font(.callout)
+                .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -87,7 +121,7 @@ struct Panel<Content: View>: View {
         VStack(alignment: .leading, spacing: 14) {
             content
         }
-        .padding(16)
+        .padding(12)
         .background(Color.appPanel)
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
@@ -95,4 +129,54 @@ struct Panel<Content: View>: View {
                 .stroke(Color.appBorder)
         )
     }
+}
+
+struct SuccessToast: View {
+    let message: ToastMessage
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "arrow.up.circle.fill")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(.green)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(message.title)
+                    .font(.headline)
+                Text(message.detail)
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.78))
+                    .lineLimit(2)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.green.opacity(0.22), in: Capsule())
+        .overlay(Capsule().stroke(.green.opacity(0.45)))
+        .shadow(color: .black.opacity(0.35), radius: 18, y: 8)
+    }
+}
+
+struct WindowConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            guard let window = view.window else { return }
+            window.minSize = NSSize(width: 760, height: 520)
+            window.isMovableByWindowBackground = true
+            let current = window.frame
+            if current.width > 1180 || current.height > 820 {
+                let size = NSSize(width: 900, height: 620)
+                if let screenFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame {
+                    let origin = NSPoint(
+                        x: screenFrame.midX - size.width / 2,
+                        y: screenFrame.midY - size.height / 2
+                    )
+                    window.setFrame(NSRect(origin: origin, size: size), display: true, animate: true)
+                }
+            }
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
